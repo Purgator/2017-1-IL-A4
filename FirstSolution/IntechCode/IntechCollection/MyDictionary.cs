@@ -33,7 +33,7 @@ namespace IntechCode.IntechCollection
             {
                 int idxBucket = Math.Abs(key.GetHashCode()) % _buckets.Length;
                 Node n = _buckets[idxBucket];
-                if (n == null || (n = FindIn(n,key)) == null ) throw new KeyNotFoundException();
+                if (n == null || (n = FindIn(n, key)) == null) throw new KeyNotFoundException();
                 return n.Data.Value;
             }
             set => DoAdd(key, value, true);
@@ -52,9 +52,10 @@ namespace IntechCode.IntechCollection
         {
             int idxBucket = Math.Abs(key.GetHashCode()) % _buckets.Length;
             Node head = _buckets[idxBucket];
-            if (head != null && (head = FindIn(head, key)) != null)
+            Node node;
+            if (head != null && (node = FindIn(head, key)) != null)
             {
-                if(allowUpdate)
+                if (allowUpdate)
                 {
                     head.Data = new KeyValuePair<TKey, TValue>(head.Data.Key, value);
                     return;
@@ -86,17 +87,11 @@ namespace IntechCode.IntechCollection
             int idxBucket = Math.Abs(key.GetHashCode()) % _buckets.Length;
             Node head = _buckets[idxBucket];
             return head != null ? FindIn(head, key) != null : false;
-            if (head != null && FindIn(head, key) != null)
-            {
-                return true;
-            }
-            return false;
-
         }
 
         public IMyEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            throw new NotImplementedException();
+            return new E(this);
         }
 
         public bool Remove(TKey key)
@@ -108,5 +103,45 @@ namespace IntechCode.IntechCollection
         {
             throw new NotImplementedException();
         }
+
+
+        class E : IMyEnumerator<KeyValuePair<TKey, TValue>>
+        {
+            readonly MyDictionary<TKey, TValue> _dictionary;
+            int _currentIndex;
+            Node _currentNode;
+
+            public E(MyDictionary<TKey, TValue> theDict)
+            {
+                _dictionary = theDict;
+                _currentIndex = -1;
+            }
+
+            public KeyValuePair<TKey, TValue> Current => _currentNode.Data;
+
+            public bool MoveNext()
+            {
+
+                if (_currentNode != null && _currentNode.Next != null)
+                {
+                    _currentNode = _currentNode.Next;
+                    return true;
+                }
+                    while (++_currentIndex < _dictionary._buckets.Length)
+                    {
+                        if (_dictionary._buckets[_currentIndex] != null)
+                        {
+                            _currentNode = _dictionary._buckets[_currentIndex];
+                            return true;
+                        }
+                    }
+                return false;
+            }
+        }
+
+ 
+
     }
+
+
 }
